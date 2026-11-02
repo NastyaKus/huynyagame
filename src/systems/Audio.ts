@@ -241,6 +241,7 @@ class AudioManager {
       const d = this.noise.getChannelData(0);
       for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       this.applyVolume();
+      this.loadSfx();
     }
     if (this.ctx.state === 'suspended') this.ctx.resume();
     if (this.pending) {
@@ -255,7 +256,7 @@ class AudioManager {
     if (!this.ctx) return;
     this.musicGain.gain.value = Settings.data.music * 0.9;
     this.sfxGain.gain.value = Settings.data.sfx * 0.8;
-    if (this.el) this.el.volume = Settings.data.music;
+    if (this.el) this.el.volume = Settings.data.music * 0.85;
   }
 
   play(id: string | null) {
@@ -269,10 +270,20 @@ class AudioManager {
     }
     const file = fileFor('music', id);
     if (file) {
-      this.el = new Audio(`assets/${file}`);
-      this.el.loop = true;
-      this.el.volume = Settings.data.music;
-      this.el.play().catch(() => (this.pending = id));
+      // плавное появление трека
+      const el = new Audio(`assets/${file}`);
+      el.loop = true;
+      el.volume = 0;
+      this.el = el;
+      el.play().catch(() => {
+        if (this.el === el) this.pending = id;
+      });
+      const target = () => Settings.data.music * 0.85;
+      const fade = setInterval(() => {
+        if (this.el !== el) return clearInterval(fade);
+        el.volume = Math.min(target(), el.volume + 0.04);
+        if (el.volume >= target()) clearInterval(fade);
+      }, 50);
       return;
     }
     const def = TRACKS[id];
@@ -307,16 +318,41 @@ class AudioManager {
   }
 
   /** Короткие процедурные звуки интерфейса и боя. */
-  sfx(name: 'click' | 'confirm' | 'cancel' | 'pickup' | 'cassette' | 'hit' | 'weak' | 'heal' | 'levelup' | 'door' | 'encounter' | 'victory' | 'miss' | 'buff' | 'text' | 'locked' | 'down') {
-    const file = fileFor('sfx', name);
-    if (file) {
-      const a = new Audio(`assets/${file}`);
-      a.volume = Settings.data.sfx;
-      a.play().catch(() => {});
-      return;
+  private buffers = new Map<string, AudioBuffer>();
+  private lastPlayed = new Map<string, number>();
+
+  /** Декодировать звуки из public/assets/sfx один раз — дальше играют мгновенно. */
+  private loadSfx() {
+    const ctx = this.ctx!;
+    for (const f of manifest.filter((x) => x.startsWith('sfx/'))) {
+      const name = f.replace(/^sfx\//, '').replace(/\.[a-z0-9]+$/i, '');
+      fetch(`assets/${f}`)
+        .then((r) => r.arrayBuffer())
+        .then((b) => ctx.decodeAudioData(b))
+        .then((buf) => this.buffers.set(name, buf))
+        .catch((e) => console.warn('sfx', name, e));
     }
+  }
+
+  sfx(name: 'click' | 'confirm' | 'cancel' | 'pickup' | 'cassette' | 'hit' | 'weak' | 'heal' | 'levelup' | 'door' | 'encounter' | 'victory' | 'miss' | 'buff' | 'text' | 'locked' | 'down') {
     const ctx = this.ctx;
     if (!ctx) return;
+    const buf = this.buffers.get(name);
+    if (buf) {
+      // не накладывать один и тот же звук чаще, чем раз в 40 мс
+      const now = ctx.currentTime;
+      if (now - (this.lastPlayed.get(name) ?? -1) < 0.04) return;
+      this.lastPlayed.set(name, now);
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      const g = ctx.createGain();
+      g.gain.value = SFX_GAIN[name] ?? 0.8;
+      if (name === 'text') src.playbackRate.value = 0.95 + Math.random() * 0.15;
+      src.connect(g).connect(this.sfxGain);
+      src.start();
+      return;
+    }
+    if (fileFor('sfx', name)) return; // файл есть, но ещё декодируется
     const t = ctx.currentTime + 0.005;
     const blip = (f: number, d: number, type: OscillatorType = 'sine', v = 0.18, at = 0, slideTo?: number) => {
       const o = ctx.createOscillator();
@@ -365,5 +401,17 @@ class AudioManager {
     }
   }
 }
+
+/** Индивидуальная громкость звуков (файловых). */
+const SFX_GAIN: Record<string, number> = {
+  text: 0.25,
+  click: 0.55,
+  confirm: 0.6,
+  cancel: 0.55,
+  victory: 0.75,
+  cassette: 0.75,
+  levelup: 0.75,
+  door: 0.6,
+};
 
 export const Audio2 = new AudioManager();

@@ -20,6 +20,7 @@ import { BattleScene } from './scenes/BattleScene';
 import { GameOverScene } from './scenes/GameOverScene';
 import { EndingScene } from './scenes/EndingScene';
 import { initNative } from './systems/Native';
+import { Audio2 } from './systems/Audio';
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -40,3 +41,4 @@ const game = new Phaser.Game({
 
 initNative(game);
 (window as any).__game = game;
+(window as any).__audio = Audio2;

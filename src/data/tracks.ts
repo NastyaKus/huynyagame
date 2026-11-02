@@ -48,3 +48,22 @@ const list: TrackDef[] = [
 ];
 
 export const TRACKS: Record<string, TrackDef> = Object.fromEntries(list.map((t) => [t.id, t]));
+
+/** Реальные треки в public/assets/music (все CC0, см. docs/CREDITS.md). */
+export const TRACK_CREDITS: Record<string, string> = {
+  menu: 'Holizna — Everything You Ever Dreamed',
+  apartment: 'Holizna — First Snow',
+  street: 'Zane Little — Midnight Cruiser',
+  konbini: 'Tarush Singhal — happy lofi day',
+  alley: 'omfgdude — Lofi again',
+  rooftop: 'Holizna — Laundry On The Wire',
+  club: 'omfgdude — Chill lofi inspired (loop: qubodup)',
+  battle: 'MintoDog — Jazzy Battle Theme',
+  boss: 'Juhani Junkala — Epic Boss Battle',
+  tape1: 'Holizna — Snow Drift',
+  tape2: 'cynicmusic — Calm Relax 1 (Synthwave 421k)',
+  tape3: 'Holizna — Keeping Cool',
+  tape4: 'omfgdude — Funky Hip Hop Lofi Jam',
+  tape5: 'Holizna — Windows Down',
+  tape6: 'Holizna — 2 Hour Delay',
+};

@@ -4,7 +4,7 @@ import { ITEMS, CASSETTE_IDS } from '../data/items';
 import { MEMBERS, expToNext } from '../data/party';
 import { SKILLS } from '../data/skills';
 import { QUESTS, QUEST_ORDER } from '../data/quests';
-import { TRACKS } from '../data/tracks';
+import { TRACKS, TRACK_CREDITS } from '../data/tracks';
 import { DIALOGUES } from '../data/dialogues';
 import { MAPS } from '../data/maps';
 import type { ItemDef, MemberState } from '../data/types';
@@ -266,7 +266,7 @@ export class GameMenuScene extends Phaser.Scene {
     Audio2.sfx('cassette');
     bus.emit('music-changed');
     Audio2.play(def.track!);
-    bus.emit('toast', `♪ ${TRACKS[def.track!]?.title ?? def.name}`, 'cassette');
+    bus.emit('toast', `♪ ${TRACK_CREDITS[def.track!] ?? TRACKS[def.track!]?.title ?? def.name}`, 'cassette');
     Quests.notify({ type: 'listen', cassette: id });
     const reaction = `listen_${id}`;
     if (DIALOGUES[reaction] && !State.flag(`heard_${id}`)) {

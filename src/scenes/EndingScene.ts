@@ -37,9 +37,12 @@ export class EndingScene extends Phaser.Scene {
       ['', 20, CSS.text],
       ['Хана · Рэн · Мию · Юмэ', 24, CSS.gold],
       ['', 20, CSS.text],
+      ['музыка: Holizna · Zane Little · omfgdude · MintoDog · Juhani Junkala · Tarush Singhal · cynicmusic', 16, CSS.dim],
+      ['звуки: Kenney · всё CC0, спасибо им ♡', 16, CSS.dim],
+      ['', 10, CSS.text],
       ['Продолжение следует…', 22, CSS.dim],
     ] as const;
-    let y = H / 2 - 210;
+    let y = H / 2 - 250;
     lines.forEach(([t, s, c], i) => {
       const o = txt(this, W / 2, y, t, s, c, { fontStyle: s > 40 ? '800' : '700' }).setOrigin(0.5).setAlpha(0);
       if (s > 40) o.setShadow(0, 0, CSS.hotpink, 20, true, true);
